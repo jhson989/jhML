@@ -14,9 +14,10 @@ class Variable():
         self.grad = np.zeros_like(self.data)
         self.creator = creator
 
-    def backward(self):
-
-        self.grad = np.ones_like(self.data)
+    def backward(self, init=True):
+        
+        if init is True:
+            self.grad = np.ones_like(self.data)
 
         funcs = [self.creator] if self.creator is not None else None
         while funcs:
