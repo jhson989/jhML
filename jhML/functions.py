@@ -5,43 +5,107 @@ from jhML.core import Function, Variable, as_variable, as_array
 
 # =============================================================================
 # Basic functions: sin / cos / tanh / exp / log
+# forward
+#   [args xs] np.ndarray data
+# backward
+#   [args gy] np.ndarray data
 # =============================================================================
 class Sin(Function):
-    def forward(self, ):
-    def backward(self, ):
-        
+    def forward(self, x) -> np.ndarray:
+        y = np.sin(x)
+        return y
+    def backward(self, gy) -> np.ndarray:
+        x = self.inputs[0].data
+        gx = gy * np.cos(x) # cos(x)
+        return gx
+
 class Cos(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def forward(self, x) -> np.ndarray:
+        y = np.cos(x)
+        return y
+    def backward(self, gy) -> np.ndarray:
+        x = self.inputs[0].data
+        gx = gy * -1 * np.sin(x)
+        return gx
         
 class Tanh(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def forward(self, x) -> np.ndarray:
+        y = np.tanh(x)
+        return y
+    def backward(self, gy) -> np.ndarray:
+        y = self.outputs[0]()
+        gx = gy * (1 - y * y)
+        return gx
 
 class Exp(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def forward(self, x) -> np.ndarray:
+        y = np.exp(x)
+        return y
+    def backward(self, gy -> np.ndarray):
+        y = self.outputs[0]()
+        gx = gy * y
+        return gx
 
 class Log(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def forward(self, x) -> np.ndarray:
+        y = np.log(x)
+        return y
+    def backward(self, gy) -> np.ndarray:
+        x = self.inputs[0].data
+        gx = gy / x
+        return gx
 
+def sin(x) -> Variable:
+    return Sin()(x)
+def cos(x) -> Variable:
+    return Cos()(x)
+def tanh(x) -> Variable:
+    return Tanh()(x)
+def exp(x) -> Variable:
+    return Exp())(x)
+def log(x) -> Variable:
+    return Log()(x)
 
 # =============================================================================
 # Tensor operations: reshape / transpose / get_item / expand_dims / flatten
 # =============================================================================
 class Reshape(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def __init__(self, shape):
+        self.shape = shape
+    def forward(self, x) -> np.ndarray:
+        y = x.reshape(self.shape)
+        return y
+    def backward(self, gy) -> np.ndarray:
+        x = self.inputs[0].data
+        gx = gy.reshape(x.shape)
+        return gx
+
         
 class Transpose(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def __init__(self, axes=None):
+        self.axes = axes
+    def forward(self, x) -> np.ndarray:
+        y = x.transpose(self.axes)
+        return y
+    def backward(self, gy) -> np.ndarray:
+        if self.axes is None:
+            inv_axes = range(x.ndim)[::-1]
+        else:
+            inv_axes = tuple(np.argsort([ax for ax in self.axes]))
+        gx = gy.transpose(self.axes)
+        return gx
         
 class GetItem(Function):
-    def forward(self, ):
+    def forward(self, ): # TODO
     def backward(self, ):
 
+def reshape(x, shape) -> Variable:
+    if x.shape == shape:
+        return as_variable(x)
+    return Reshape(shape)(x)
+
+def transpose(x, axes=None) -> Variable:
+    return Transpose(axes)(x)
 
 # =============================================================================
 # sum / sum_to / broadcast_to / average / matmul / linear

@@ -6,6 +6,7 @@ import jhML
 # ===================================
 # Configuration
 # ===================================
+
 class ProgramConfig:
     """
     Global class variables used for setting Program configurations
@@ -146,6 +147,7 @@ class Parameter(Variable):
     pass
 
 
+
 # ===================================
 # Function
 # ===================================
@@ -177,6 +179,7 @@ class Function:
 
     def backward(self, gys):
         raise NotImplementedError()
+
 
 
 # ===================================
