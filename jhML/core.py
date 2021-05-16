@@ -141,6 +141,9 @@ def as_array(x):
     return x
 
 
+### For convenience : an alias (Variable -> Parameter)
+class Parameter(Variable):
+    pass
 
 
 # ===================================
@@ -166,7 +169,6 @@ class Function:
             self.inputs = inputs
             self.outputs = [weakref.ref(output) for output in outputs]
 
-
         return outputs if len(outputs) > 1 else outputs[0]
 
 
@@ -182,7 +184,7 @@ class Function:
 # forward
 #   [args xs] : np.ndarray type. xs are data
 # backward
-#   [gy] : np.ndarray type. gy is gradient from a child variable.
+#   [args gy] : np.ndarray type. gy is a gradient from a child variable.
 # ===================================
 
 class Add(Function):
@@ -211,7 +213,6 @@ class Neg(Function):
     def backward(self,gy):
         return -gy
 
-
 class Sub(Function):
     def forward(self,x0, x1):
         return x0-x1
@@ -232,8 +233,6 @@ class Div(Function):
             raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
         return gx0, gx1
 
-
-
 class Pow(Function):
     def __init__(self, c):
         self.c = c
@@ -241,7 +240,7 @@ class Pow(Function):
         retrn x0 ** self.c
     def backward(self, gy):
         x0, = self.inputs
-        return gy * self.c * x0**(c-1)
+        return gy * self.c * (x0**(c-1))
 
 
 def add(x0, x1):
@@ -252,14 +251,19 @@ def mul(x0, x1):
 
 def neg(x):
     return Neg()(x)
+
 def sub(x0, x1):
     return Sub()(x0, x1)
+
 def rsub(x0, x1):
     return Sub()(x1, x0)
+
 def div(x0, x1):
-    return Div(x0, x1)
+    return Div()(x0, x1)
+
 def rdiv(x0, x1):
     return Div()(x1, x0)
+
 def pow(x, c):
     return Pow(c)(x)
 
