@@ -44,7 +44,7 @@ class Variable():
                 x.grad = x.grad + gx
 
                 if x.creator is not None:
-                    add_func(x.creator, gx)
+                    add_func(x.creator, gx) ## error ocuured
             
     def clearGrad(self):
         self.grad = np.zeros_like(self.data)
