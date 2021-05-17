@@ -204,8 +204,9 @@ class Add(Function):
     def backward(self, gy):
         x0, x1 = self.inputs[0].data, self.inputs[1].data
         gx0, gx1 = gy, gy
-        if x0.shape != x1.shape: # broadcast
-            raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
+        if x0.shape != x1.shape:  # for broadcast
+            gx0 = jhML.functions.sum_to(gx0, x0.shape)
+            gx1 = jhML.functions.sum_to(gx1, x1.shape)
         return gx0, gx1
             
 class Mul(Function):
@@ -213,9 +214,11 @@ class Mul(Function):
         return x0 * x1
     def backward(self, gy):
         x0, x1 = self.inputs[0].data, self.inputs[1].data
-        if x0.shape != x1.shape: # broadcast
-            raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
-        return gy*x1, gy*x0
+        gx0, gx1 = gy*x1, gy*x0
+        if x0.shape != x1.shape:  # for broadcast
+            gx0 = jhML.functions.sum_to(gx0, x0.shape)
+            gx1 = jhML.functions.sum_to(gx1, x1.shape)
+        return gx0, gx1
 
 class Neg(Function):
     def forward(self,x):
@@ -229,8 +232,9 @@ class Sub(Function):
     def backward(self, gy):
         x0, x1 = self.inputs[0].data, self.inputs[1].data
         gx0, gx1 = gy, -gy
-        if x0.shape != x1.shape: # broadcast
-            raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
+        if x0.shape != x1.shape:  # for broadcast
+            gx0 = jhML.functions.sum_to(gx0, x0.shape)
+            gx1 = jhML.functions.sum_to(gx1, x1.shape)
         return gx0, gx1
 
 class Div(Function):
@@ -239,8 +243,6 @@ class Div(Function):
     def backward(self,gy):
         x0, x1 = self.inputs[0].data, self.inputs[1].data
         gx0, gx1 = gy/x1, gy * (-x0/x1**2)
-        if x0.shape != x1.shape: # broadcast
-            raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
         return gx0, gx1
 
 class Pow(Function):

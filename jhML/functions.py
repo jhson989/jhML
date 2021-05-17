@@ -126,7 +126,6 @@ def flatten(x):
 # =============================================================================
 # sum / sum_to / broadcast_to / average / matmul / linear
 # =============================================================================
-'''
 class Sum(Function):
     def __init__(self, axis, keepdims):
         self.axis = axis
@@ -136,14 +135,64 @@ class Sum(Function):
         return y
     def backward(self, gy):
         x = self.inputs[0].data
-        
+        gy = self.reshape_sum_backward(gy)
+        gx = np.broadcast_to(gy, x.shape)
+        return gx
+
+    def reshape_sum_backward(self, gy):    
+        x = self.inputs[0].data
+        axis = self.axis
+        keepdims = self.keepdims
+        ndim = len(x.shape)
+        tuple_axis = axis
+        if axis is None:
+            tuple_axis = None
+        elif not isinstance(axis, tuple):
+            tuple_axis = (axis, )
+
+        if (ndim == 0 or tuple_axis is None or keepdims):
+            shape = gy.shape
+        else:
+            actual_axis = [a if a >=0 else a+ndim for a in tuple_axis]
+            shape = list(gy.shape)
+            for a in sorted(actual_axis):
+                shape.insert(a, 1)
+
+        gy = gy.reshape(shape)
+        return gy
+
 class SumTo(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def __init__(self, shape):
+        self.y_shape = shape
+    def forward(self, x):
+        return self.sum_to(x)
+    def backward(self, gy):
+        x = self.inputs[0].data
+        return broadcast_to(gy, x.shape)
+    def sum_to(self, x):   
+        ndim = len(self.y_shape)
+        lead = x.ndim - ndim
+        lead_axis = tuple(range(lead))
+
+        axis = tuple([i + lead for i, sx in enumerate(self.y_shape) if sx == 1])
+        y = x.sum(lead_axis + axis, keepdims=True)
+        if lead > 0:
+            y = y.squeeze(lead_axis)
+        return y
+
         
 class BroadcastTo(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def __init__(self, shape):
+        self.y_shape = shape
+    def forward(self, x):
+        y = np.broadcast_to(x, self.y_shape)
+        return y
+    def backward(self, gy):
+        x = self.inputs[0].data
+        return sum_to(gy, x.shape)
+
+
+'''
 
 class MatMul(Function):
     def forward(self, ):
@@ -152,12 +201,27 @@ class MatMul(Function):
 class Linear(Function):
     def forward(self, ):
     def backward(self, ):
+        pass
 
+'''       
 
 def sum(x, axis=None, keepdims=False):
     return Sum(axis, keepdims)(x)
 
+def sum_to(x, shape):
+    if shape == x.shape:
+        return as_variable(x)
+    return SumTo(shape)(x)
 
+def broadcast_to(x, shape):
+    if shape == x.shape:
+        return as_variable(x)
+    return BroadcastTo(shape)(x)
+
+
+
+
+'''
 # =============================================================================
 # activation function: sigmoid / relu / softmax / log_softmax / leaky_relu
 # =============================================================================
@@ -222,11 +286,11 @@ class Clip(Function):
 # conv2d / col2im / im2col / basic_math
 # =============================================================================
 from jhML.functions_conv import *
-from dezero.core import add
-from dezero.core import sub
-from dezero.core import rsub
-from dezero.core import mul
-from dezero.core import div
-from dezero.core import neg
-from dezero.core import pow
+from jhML.core import add
+from jhML.core import sub
+from jhML.core import rsub
+from jhML.core import mul
+from jhML.core import div
+from jhML.core import neg
+from jhML.core import pow
 
