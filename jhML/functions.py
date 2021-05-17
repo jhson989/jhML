@@ -123,13 +123,19 @@ def flatten(x):
     return reshape(x, (x.shape[0], -1))
 
 
-'''
 # =============================================================================
 # sum / sum_to / broadcast_to / average / matmul / linear
 # =============================================================================
+'''
 class Sum(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def __init__(self, axis, keepdims):
+        self.axis = axis
+        self.keepdims = keepdims
+    def forward(self, x):
+        y = x.sum(axis=self.axis, keepdims=self.keepdims)
+        return y
+    def backward(self, gy):
+        x = self.inputs[0].data
         
 class SumTo(Function):
     def forward(self, ):
@@ -146,6 +152,11 @@ class MatMul(Function):
 class Linear(Function):
     def forward(self, ):
     def backward(self, ):
+
+
+def sum(x, axis=None, keepdims=False):
+    return Sum(axis, keepdims)(x)
+
 
 # =============================================================================
 # activation function: sigmoid / relu / softmax / log_softmax / leaky_relu
@@ -211,5 +222,11 @@ class Clip(Function):
 # conv2d / col2im / im2col / basic_math
 # =============================================================================
 from jhML.functions_conv import *
-
+from dezero.core import add
+from dezero.core import sub
+from dezero.core import rsub
+from dezero.core import mul
+from dezero.core import div
+from dezero.core import neg
+from dezero.core import pow
 
