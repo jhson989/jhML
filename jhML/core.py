@@ -47,7 +47,7 @@ class Variable():
     """
     __array_priority__ = 200 # High priority for operators
 
-    def __init__(self, data, name=None):
+    def __init__(self, data, requires_grad=True, name=None):
 
         if data is not None and not isinstance(data, np.ndarray):
             data = np.array(data)
@@ -81,7 +81,8 @@ class Variable():
     def __repr__(self):
         if self.data is None:
             return "Variable (None)"
-        return str("Variable ("+str(self.data)+")")
+        return str("Variable ("+str(self.data)+")").replace('\n', '\n' + ' ' * 10)
+
 
     def set_creator(self, func):
         self.creator = func
@@ -114,6 +115,7 @@ class Variable():
             f = funcs.pop()
             gys = [output().grad for output in f.outputs]
             gxs = f.backward(*gys)
+    
             if not isinstance(gxs, tuple):
                 gxs = (gxs,)
 
@@ -140,6 +142,11 @@ def as_array(x):
     if np.isscalar(x):
         return np.array(x)
     return x
+
+def tensor(obj):
+    if isinstance(obj, np.ndarray):
+        return obj
+    return np.array(obj)
 
 
 ### For convenience : an alias (Variable -> Parameter)
@@ -195,7 +202,7 @@ class Add(Function):
         return x0+x1
 
     def backward(self, gy):
-        x0, x1 = self.inputs
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
         gx0, gx1 = gy, gy
         if x0.shape != x1.shape: # broadcast
             raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
@@ -205,7 +212,7 @@ class Mul(Function):
     def forward(self,x0, x1):
         return x0 * x1
     def backward(self, gy):
-        x0, x1 = self.inputs
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
         if x0.shape != x1.shape: # broadcast
             raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
         return gy*x1, gy*x0
@@ -219,8 +226,8 @@ class Neg(Function):
 class Sub(Function):
     def forward(self,x0, x1):
         return x0-x1
-    def backward(self,):
-        x0, x1 = self.inputs
+    def backward(self, gy):
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
         gx0, gx1 = gy, -gy
         if x0.shape != x1.shape: # broadcast
             raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
@@ -230,7 +237,7 @@ class Div(Function):
     def forward(self,x0, x1):
         return x0/x1
     def backward(self,gy):
-        x0, x1 = self.inputs
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
         gx0, gx1 = gy/x1, gy * (-x0/x1**2)
         if x0.shape != x1.shape: # broadcast
             raise ValueError("Should be same shape") #TODO : implement a broadcast opearation
@@ -240,10 +247,10 @@ class Pow(Function):
     def __init__(self, c):
         self.c = c
     def forward(self, x0):
-        retrn x0 ** self.c
+        return x0 ** self.c
     def backward(self, gy):
-        x0, = self.inputs
-        return gy * self.c * (x0**(c-1))
+        x0= self.inputs[0].data
+        return gy * self.c * (x0**(self.c-1))
 
 
 def add(x0, x1):

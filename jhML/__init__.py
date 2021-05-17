@@ -13,6 +13,8 @@ It will support GPGPU features, so you can run your tensor computations on an GP
 
 from jhML.core import Variable
 from jhML.core import Function
+from jhML.core import tensor
+from jhML.core import setup_variable
 
 setup_variable()
 __version__ = "0.0.1"

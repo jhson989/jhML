@@ -41,7 +41,7 @@ class Exp(Function):
     def forward(self, x) -> np.ndarray:
         y = np.exp(x)
         return y
-    def backward(self, gy -> np.ndarray):
+    def backward(self, gy) -> np.ndarray:
         y = self.outputs[0]()
         gx = gy * y
         return gx
@@ -62,7 +62,7 @@ def cos(x) -> Variable:
 def tanh(x) -> Variable:
     return Tanh()(x)
 def exp(x) -> Variable:
-    return Exp())(x)
+    return Exp()(x)
 def log(x) -> Variable:
     return Log()(x)
 
@@ -88,6 +88,7 @@ class Transpose(Function):
         y = x.transpose(self.axes)
         return y
     def backward(self, gy) -> np.ndarray:
+        x = self.inputs[0].data
         if self.axes is None:
             inv_axes = range(x.ndim)[::-1]
         else:
@@ -96,8 +97,16 @@ class Transpose(Function):
         return gx
         
 class GetItem(Function):
-    def forward(self, ): # TODO
-    def backward(self, ):
+    def __init__(self, slices):
+        self.slices = slices
+        
+    def forward(self, x) -> np.ndarray:
+        return x[self.slices]
+    def backward(self, gy) -> np.ndarray:
+        x = self.inputs[0].data
+        gx = np.zeros(x.shape, dtype=gy.dtype)
+        np.add.at(gx, self.slices, gy)
+        return gx
 
 def reshape(x, shape) -> Variable:
     if x.shape == shape:
@@ -107,6 +116,14 @@ def reshape(x, shape) -> Variable:
 def transpose(x, axes=None) -> Variable:
     return Transpose(axes)(x)
 
+def get_item(x, slices) -> Variable:
+    return GetItem(slices)(x)
+
+def flatten(x):
+    return reshape(x, (x.shape[0], -1))
+
+
+'''
 # =============================================================================
 # sum / sum_to / broadcast_to / average / matmul / linear
 # =============================================================================
@@ -188,6 +205,7 @@ class Clip(Function):
     def forward(self, ):
     def backward(self, ):
 
+'''
 
 # =============================================================================
 # conv2d / col2im / im2col / basic_math
