@@ -48,3 +48,16 @@ if __name__ == "__main__":
     print(c)
     print(a.grad)
 
+    a = Variable(np.random.randn(3))
+    print(a)
+    b = F.broadcast_to(a, [1, 3])
+    print(b)
+    b = F.broadcast_to(a, [2, 3])
+    print(b)
+    b = F.broadcast_to(a, [2, 2, 3])
+    print(b)
+    a = F.sum_to(b, [2, 3])
+    print(a)
+    a = F.sum_to(b, [3])
+    print(a)
+

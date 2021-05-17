@@ -191,19 +191,33 @@ class BroadcastTo(Function):
         x = self.inputs[0].data
         return sum_to(gy, x.shape)
 
-
-'''
-
 class MatMul(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def forward(self, x, W):
+        y = x.dot(W)
+        return y
+    def backward(self, gy):
+        x, W = self.inputs[0].data, self.inputs[1].data
+        gx = gy.dot(W.T)
+        gW = (x.T).dot(gy)
+        return gx, gW
+
 
 class Linear(Function):
-    def forward(self, ):
-    def backward(self, ):
-        pass
+    def forward(self, x, W, b=None):
+        y = x.dot(W)
+        if b is not None:
+            y = y + b
+        return y
+    def backward(self, gy):
+        x, W, b = self.inputs[0].data, self.inputs[1].data, self.inputs[2].data 
+        gb = None if b.data is None else sum_to(gy, b.shape)
+        gx = gy.dot(W.T)
+        gW = (x.T).dot(gy)
+        return gx, gW, gb
 
-'''       
+
+
+        
 
 def sum(x, axis=None, keepdims=False):
     return Sum(axis, keepdims)(x)
@@ -217,7 +231,18 @@ def broadcast_to(x, shape):
     if shape == x.shape:
         return as_variable(x)
     return BroadcastTo(shape)(x)
+    
+def average(x, axis=None, keepdims=False):
+    x = as_variable(x)
+    y = sum(x, axis, keepdims) * (y.data.size / x.data/size)
+    return y
+mean = average # alias
 
+def matmul(x, W):
+    return MatMul()(x, W)
+
+def linear(x, W, b=None):
+    return Linear()(x, W, b)
 
 
 
