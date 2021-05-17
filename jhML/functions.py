@@ -210,7 +210,7 @@ class Linear(Function):
         return y
     def backward(self, gy) -> np.ndarray:
         x, W, b = self.inputs[0].data, self.inputs[1].data, self.inputs[2].data 
-        gb = None if b.data is None else sum_to(gy, b.shape)
+        gb = None if b.data is None else sum_to(gy, b.shape).data
         gx = gy.dot(W.T)
         gW = (x.T).dot(gy)
         return gx, gW, gb
@@ -249,7 +249,7 @@ def linear(x, W, b=None) -> Variable:
 # =============================================================================
 class Sigmoid(Function):
     def forward(self, x):
-        #y = 1 / (1 + np.exp(-x))
+        #y = 1 / (1 + np.exp(-x)
         y = np.tanh(x*0.5)*0.5 + 0.5
         return y
     def backward(self, gy):
@@ -290,16 +290,29 @@ def relu(x):
 
 
 
-'''
 
 # =============================================================================
 # loss function: mean_squared_error / softmax_cross_entropy / sigmoid_cross_entropy / binary_cross_entropy
 # =============================================================================
         
 class MeanSquaredError(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def forward(self, x0, x1):
+        diff = x0 - x1
+        y = diff.sum() / len(diff)
+        return y
+    def backward(self, gy):
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        diff = x0 - x1
+        gx0 = gy * 2 * diff * (1/len(diff))
+        gx1 = -gx0
+        return gx0, gx1
 
+
+def mean_squared_error(x0, x1):
+    return MeanSquaredError()(x0, x1)
+
+
+'''
 class SoftmaxCrossEntropy(Function):
     def forward(self, ):
     def backward(self, ):
