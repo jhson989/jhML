@@ -130,10 +130,10 @@ class Sum(Function):
     def __init__(self, axis, keepdims):
         self.axis = axis
         self.keepdims = keepdims
-    def forward(self, x):
+    def forward(self, x) -> np.ndarray:
         y = x.sum(axis=self.axis, keepdims=self.keepdims)
         return y
-    def backward(self, gy):
+    def backward(self, gy) -> np.ndarray:
         x = self.inputs[0].data
         gy = self.reshape_sum_backward(gy)
         gx = np.broadcast_to(gy, x.shape)
@@ -164,9 +164,9 @@ class Sum(Function):
 class SumTo(Function):
     def __init__(self, shape):
         self.y_shape = shape
-    def forward(self, x):
+    def forward(self, x) -> np.ndarray:
         return self.sum_to(x)
-    def backward(self, gy):
+    def backward(self, gy) -> np.ndarray:
         x = self.inputs[0].data
         return broadcast_to(gy, x.shape)
     def sum_to(self, x):   
@@ -184,18 +184,18 @@ class SumTo(Function):
 class BroadcastTo(Function):
     def __init__(self, shape):
         self.y_shape = shape
-    def forward(self, x):
+    def forward(self, x) -> np.ndarray:
         y = np.broadcast_to(x, self.y_shape)
         return y
-    def backward(self, gy):
+    def backward(self, gy) -> np.ndarray:
         x = self.inputs[0].data
         return sum_to(gy, x.shape)
 
 class MatMul(Function):
-    def forward(self, x, W):
+    def forward(self, x, W) -> np.ndarray:
         y = x.dot(W)
         return y
-    def backward(self, gy):
+    def backward(self, gy) -> np.ndarray:
         x, W = self.inputs[0].data, self.inputs[1].data
         gx = gy.dot(W.T)
         gW = (x.T).dot(gy)
@@ -203,12 +203,12 @@ class MatMul(Function):
 
 
 class Linear(Function):
-    def forward(self, x, W, b=None):
+    def forward(self, x, W, b=None) -> np.ndarray:
         y = x.dot(W)
         if b is not None:
             y = y + b
         return y
-    def backward(self, gy):
+    def backward(self, gy) -> np.ndarray:
         x, W, b = self.inputs[0].data, self.inputs[1].data, self.inputs[2].data 
         gb = None if b.data is None else sum_to(gy, b.shape)
         gx = gy.dot(W.T)
@@ -217,47 +217,58 @@ class Linear(Function):
 
 
 
-        
-
-def sum(x, axis=None, keepdims=False):
+def sum(x, axis=None, keepdims=False) -> Variable:
     return Sum(axis, keepdims)(x)
 
-def sum_to(x, shape):
+def sum_to(x, shape) -> Variable:
     if shape == x.shape:
         return as_variable(x)
     return SumTo(shape)(x)
 
-def broadcast_to(x, shape):
+def broadcast_to(x, shape) -> Variable:
     if shape == x.shape:
         return as_variable(x)
     return BroadcastTo(shape)(x)
     
-def average(x, axis=None, keepdims=False):
+def average(x, axis=None, keepdims=False) -> Variable:
     x = as_variable(x)
-    y = sum(x, axis, keepdims) * (y.data.size / x.data/size)
-    return y
+    y = sum(x, axis, keepdims) 
+    return y * (y.data.size / x.data.size)
 mean = average # alias
 
-def matmul(x, W):
+def matmul(x, W) -> Variable:
     return MatMul()(x, W)
 
-def linear(x, W, b=None):
+def linear(x, W, b=None) -> Variable:
     return Linear()(x, W, b)
 
 
 
-'''
 # =============================================================================
 # activation function: sigmoid / relu / softmax / log_softmax / leaky_relu
 # =============================================================================
 class Sigmoid(Function):
-    def forward(self, ):
-    def backward(self, ):
-        
+    def forward(self, x):
+        #y = 1 / (1 + np.exp(-x))
+        y = np.tanh(x*0.5)*0.5 + 0.5
+        return y
+    def backward(self, gy):
+        y = self.outputs[0]().data
+        return gy * y * (1-y)
+
 class ReLU(Function):
-    def forward(self, ):
-    def backward(self, ):
-        
+    def forward(self, x) -> np.ndarray:
+        y = np.maximum(x, 0.0)
+        return y
+    def backward(self, gy) -> np.ndarray:
+        x = self.inputs[0].data
+        mask = x > 0
+        gx = gy * mask
+        return gx
+
+
+'''  
+
 class Softmax(Function):
     def forward(self, ):
     def backward(self, ):
@@ -269,6 +280,18 @@ class LogSoftmax(Function):
 class LeakyReLU(Function):
     def forward(self, ):
     def backward(self, ):
+
+'''
+def sigmoid(x):
+    return Sigmoid()(x)
+
+def relu(x):
+    return ReLU()(x)
+
+
+
+'''
+
 # =============================================================================
 # loss function: mean_squared_error / softmax_cross_entropy / sigmoid_cross_entropy / binary_cross_entropy
 # =============================================================================

@@ -115,10 +115,9 @@ class Variable():
             f = funcs.pop()
             gys = [output().grad for output in f.outputs]
             gxs = f.backward(*gys)
-    
+            
             if not isinstance(gxs, tuple):
                 gxs = (gxs,)
-
             for x, gx in zip(f.inputs, gxs):
                 if x.grad is None:
                     x.grad = gx
