@@ -33,7 +33,7 @@ class Tanh(Function):
         y = np.tanh(x)
         return y
     def backward(self, gy) -> np.ndarray:
-        y = self.outputs[0]()
+        y = self.outputs[0]().data
         gx = gy * (1 - y * y)
         return gx
 
@@ -42,7 +42,7 @@ class Exp(Function):
         y = np.exp(x)
         return y
     def backward(self, gy) -> np.ndarray:
-        y = self.outputs[0]()
+        y = self.outputs[0]().data
         gx = gy * y
         return gx
 
@@ -249,7 +249,7 @@ def linear(x, W, b=None) -> Variable:
 # =============================================================================
 class Sigmoid(Function):
     def forward(self, x):
-        #y = 1 / (1 + np.exp(-x)
+        #y = 1 / (1 + np.exp(-x))
         y = np.tanh(x*0.5)*0.5 + 0.5
         return y
     def backward(self, gy):
@@ -277,7 +277,7 @@ class Softmax(Function):
         y /= y.sum(axis=self.axis, keepdims=True)
         return y
     def backward(self, gy):
-        y = self.outputs[0]()
+        y = self.outputs[0]().data
         gx = y * gy
         sumdx = gx.sum(axis=self.axis, keepdims=True)
         gx -= y * sumdx
@@ -287,15 +287,17 @@ class LogSoftmax(Function):
     def __init__(self, axis):
         self.axis = axis
     def forward(self, x):
-        y = x-x.max(axis=self.axis, keepdims=True)
-        y = np.exp(y)
-        y /= y.sum(axis=self.axis, keepdims=True)
+        m = x.max(axis=self.axis, keepdims=True)
+        y = x - m
+        np.exp(y, out=y)
+        s = y.sum(axis=self.axis, keepdims=True)
+        np.log(s, out=s)
+        log_z = m+s
+        y = x - log_z
         return y
     def backward(self, gy):
-        y = self.outputs[0]()
-        gx = y * gy
-        sumdx = gx.sum(axis=self.axis, keepdims=True)
-        gx -= y * sumdx
+        y = self.outputs[0]().data
+        gx = gy - np.exp(y) * gy.sum(axis=self.axis, keepdims=True)
         return gx
 
 class LeakyReLU(Function):
@@ -304,6 +306,7 @@ class LeakyReLU(Function):
     def forward(self, x):
         y = x.copy()
         y[y<0] *= self.slope
+        return y
     def backward(self, gy):
         x = self.inputs[0].data
         mask = (x>0).astype(gy.dtype)

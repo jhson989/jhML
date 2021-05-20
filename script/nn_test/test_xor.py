@@ -9,16 +9,18 @@ def clear_grad(parameters):
     for param in parameters:
         param.clear_grad()
 
-def update_grad(parameters, lr=1e-3):
+def update_grad(parameters, lr=1e-1):
     for param in parameters:
-        param.data -= lr*param.grad
+        if param.grad is not None:
+            param.data -= lr*param.grad
 
 def forward(x, parameters):
+    activ = F.relu
     W1, b1, W2, b2, W3, b3, W4, b4 = parameters
     t = x
-    t = F.relu((F.linear(t, W1, b1)))
-    t = F.relu((F.linear(t, W2, b2)))
-    t = F.relu((F.linear(t, W3, b3)))
+    t = activ((F.linear(t, W1, b1)))
+    t = activ((F.linear(t, W2, b2)))
+#    t = activ((F.linear(t, W3, b3)))
     return F.linear(t, W4, b4)
     
 if __name__ == "__main__":
@@ -48,7 +50,7 @@ if __name__ == "__main__":
 
     parameters = [W1, b1, W2, b2, W3, b3, W4, b4]
 
-    num_epoch = int(1e+4)
+    num_epoch = int(1e+5)
     for epoch in range(num_epoch):
         clear_grad(parameters)
         pred = forward(x, parameters)
