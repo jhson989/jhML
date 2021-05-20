@@ -5,12 +5,12 @@ import jhML
 import jhML.functions as F
 import numpy as np
 
-def clear_grad(parameter):
-    for param in parameter:
+def clear_grad(parameters):
+    for param in parameters:
         param.clear_grad()
 
-def update_grad(parameter, lr=1e-3):
-    for param in parameter:
+def update_grad(parameters, lr=1e-3):
+    for param in parameters:
         param.data -= lr*param.grad
 
 def forward(x, parameters):

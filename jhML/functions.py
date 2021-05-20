@@ -168,7 +168,7 @@ class SumTo(Function):
         return self.sum_to(x)
     def backward(self, gy) -> np.ndarray:
         x = self.inputs[0].data
-        return broadcast_to(gy, x.shape)
+        return broadcast_to(gy, x.shape).data
     def sum_to(self, x):   
         ndim = len(self.y_shape)
         lead = x.ndim - ndim
@@ -189,7 +189,7 @@ class BroadcastTo(Function):
         return y
     def backward(self, gy) -> np.ndarray:
         x = self.inputs[0].data
-        return sum_to(gy, x.shape)
+        return sum_to(gy, x.shape).data
 
 class MatMul(Function):
     def forward(self, x, W) -> np.ndarray:
@@ -267,26 +267,66 @@ class ReLU(Function):
         return gx
 
 
-'''  
 
 class Softmax(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def __init__(self, axis):
+        self.axis = axis
+    def forward(self, x):
+        y = x-x.max(axis=self.axis, keepdims=True)
+        y = np.exp(y)
+        y /= y.sum(axis=self.axis, keepdims=True)
+        return y
+    def backward(self, gy):
+        y = self.outputs[0]()
+        gx = y * gy
+        sumdx = gx.sum(axis=self.axis, keepdims=True)
+        gx -= y * sumdx
+        return gx
 
 class LogSoftmax(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def __init__(self, axis):
+        self.axis = axis
+    def forward(self, x):
+        y = x-x.max(axis=self.axis, keepdims=True)
+        y = np.exp(y)
+        y /= y.sum(axis=self.axis, keepdims=True)
+        return y
+    def backward(self, gy):
+        y = self.outputs[0]()
+        gx = y * gy
+        sumdx = gx.sum(axis=self.axis, keepdims=True)
+        gx -= y * sumdx
+        return gx
 
 class LeakyReLU(Function):
-    def forward(self, ):
-    def backward(self, ):
+    def __init__(self, slope):
+        self.slope = slope
+    def forward(self, x):
+        y = x.copy()
+        y[y<0] *= self.slope
+    def backward(self, gy):
+        x = self.inputs[0].data
+        mask = (x>0).astype(gy.dtype)
+        mask[mask<0] = self.slope
+        gx = gy*mask
+        return gx
 
-'''
+
 def sigmoid(x):
     return Sigmoid()(x)
 
 def relu(x):
     return ReLU()(x)
+
+def softmax(x, axis=1):
+    return Softmax(axis)(x)
+
+def log_softmax(x, axis=1):
+    return LogSoftmax(axis)(x)
+
+def leaky_relu(x, slope=0.2):
+    return LeakyReLU(slope)(x)
+
 
 
 
@@ -317,9 +357,6 @@ class SoftmaxCrossEntropy(Function):
     def forward(self, ):
     def backward(self, ):
 
-class LeakyReLU(Function):
-    def forward(self, ):
-    def backward(self, ):
 
 # =============================================================================
 # accuracy / dropout / batch_norm / embed_id
