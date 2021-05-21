@@ -19,7 +19,7 @@ class Layer:
     def __setattr__(self, name, value):
         if isinstance(value, (Parameter, Layer)):
             self._params.add(name)
-        super().__setattr__(name, value) # TODO WHY
+        super().__setattr__(name, value)
 
 
     def __call__(self, *inputs):
@@ -82,4 +82,23 @@ class Linear(Layer):
 
         y = F.linear(x, self.W, self.b)
         return y
+
+ReLU = F.ReLU        
+
+
+class Sequential(Layer):
+
+    def __init__(self, *layers):
+        super().__init__()
+        self.layers = []
+        
+        for i, layer in enumerate(layers):
+            setattr(self, 'l'+str(i), layer)
+            self.layers.append(layer)
+
+
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
+        return x
 

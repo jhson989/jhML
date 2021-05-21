@@ -10,7 +10,7 @@ class Optimizer:
         self.hooks = []
 
     def zero_grad(self):
-        for param in self.params:
+        for param in self.params():
             param.clear_grad()
 
     def step(self):
@@ -18,7 +18,7 @@ class Optimizer:
         for f in self.hooks:
             f(params)
 
-        for param in self.params:
+        for param in self.params():
             self.update_one(param)
 
     def update_one(self, param):
