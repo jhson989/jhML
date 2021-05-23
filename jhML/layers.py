@@ -76,24 +76,31 @@ class Linear(Layer):
             self.b = Parameter(np.zeros(out_size, dtype=dtype), name="b")
 
     def _init_W(self):
+        r''' He weight initialization
+        Proposed by He et al. , 2015 <https://arxiv.org/abs/1502.01852>
+        '''
         I, O = self.in_size, self.out_size
         W_data = np.random.randn(I, O).astype(self.dtype) * np.sqrt(1 / I)
         self.W.data = W_data
 
     def forward(self, x):
-        if self.W.data is None:
-            self.in_size = x.shape[1]
-            xp = cuda.get_array_module(x)
-            self._init_W(xp)
-
         y = F.linear(x, self.W, self.b)
         return y
 
 ReLU = F.ReLU        
 
-
 class Sequential(Layer):
-
+    r"""A sequential container.
+    Modules will be added to it in the order they are passed in the constructor.
+    To make it easier to understand, here is a small example::
+        # Example of using Sequential
+        model = nn.Sequential(
+                  nn.Conv2d(1,20,5),
+                  nn.ReLU(),
+                  nn.Conv2d(20,64,5),
+                  nn.ReLU()
+                )
+    """
     def __init__(self, *layers):
         super().__init__()
         self.layers = []
@@ -107,4 +114,5 @@ class Sequential(Layer):
         for layer in self.layers:
             x = layer(x)
         return x
+
 
