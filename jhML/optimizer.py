@@ -16,9 +16,10 @@ class Optimizer:
 
     def __init__(self, params, lr, hooks=[]):
         '''
-        args:
-            params: List of variables to be updated
-            lr: learning rate
+        Args:
+            params (iterable): iterable of parameters to optimize
+            lr (float): learning rate
+            hooks: list of hook function applied to parameters
         '''
         self.lr = lr
         self.params = params
@@ -58,15 +59,16 @@ class SGD(Optimizer):
     def __init__(self, params, lr, weight_decay=0.0, hooks=[]):
         '''
         Stochastic Gradient Descent
+        Args:
+            params (iterable): iterable of parameters to optimize
+            lr (float): learning rate
+            weight_decay (float): weight decay (L2 penalty) (default: 0)
+            hooks: list of hook function applied to parameters
         '''
         super().__init__(params, lr, hooks)
         self.weight_decay = weight_decay
 
-    def update_one(self, param: Variable):
-        '''
-        arg1:
-            param: A variable to be updated
-        '''
+    def update_one(self, param: Parameter):
 
         if self.weight_decay != 0.0:
             param.grad += self.weight_decay * param.data
@@ -79,17 +81,19 @@ class MomentumSGD(Optimizer):
     def __init__(self, params, lr, momentum=0.9, weight_decay=0.0, hooks=[]):
         '''
         Stochastic Gradient Descent with Momentum
+        Args:
+            params (iterable): iterable of parameters to optimize
+            lr (float): learning rate
+            momentum (float): momentum factor (default: 0.9)
+            weight_decay (float): weight decay (L2 penalty) (default: 0)
+            hooks: list of hook function applied to parameters
         '''
         super().__init__(params, lr, hooks)
         self.m = momentum
         self.v = {}
         self.weight_decay = weight_decay
 
-    def update_one(self, param: Variable):
-        '''
-        arg1:
-            param: A variable to be updated
-        '''
+    def update_one(self, param: Parameter):
 
         if self.weight_decay != 0.0:
             param.grad += self.weight_decay * param.data
@@ -101,22 +105,25 @@ class MomentumSGD(Optimizer):
         self.v[key] = self.m * self.v[key] - self.lr * param.grad
         param.data += self.v[key]
 
+
 class AdaGrad(Optimizer):
 
     def __init__(self, params, lr, weight_decay=0.0, eps=1e-8, hooks=[]):
         '''
         Adaptively adjust learning rates for each parameter
+        Args:
+            params (iterable): iterable of parameters to optimize
+            lr (float): learning rate
+            eps (float): term added to the denominator to improve numerical stability (default: 1e-8)
+            weight_decay (float): weight decay (L2 penalty) (default: 0)
+            hooks: list of hook function applied to parameters
         '''
         super().__init__(params, lr, hooks)
         self.h = {}
         self.eps = eps
         self.weight_decay = weight_decay
 
-    def update_one(self, param: Variable):
-        '''
-        arg1:
-            param: A variable to be updated
-        '''
+    def update_one(self, param: Parameter):
         key = id(param)
         if key not in self.h:
             self.h[key] = np.zeros_like(param.data)
@@ -127,6 +134,36 @@ class AdaGrad(Optimizer):
         self.h[key] = self.h[key] + param.grad * param.grad
         param.data -= self.lr * param.grad / ( self.eps + np.sqrt(self.h[key]) )
 
+
+class RMSprop(Optimizer):
+
+    def __init__(self, params, lr, alpha=0.99, weight_decay=0.0, eps=1e-8, hooks=[]):
+        r"""Implements RMSprop algorithm.
+        Proposed by G. Hinton <https://arxiv.org/pdf/1308.0850v5.pdf>
+        Args:
+            params (iterable): iterable of parameters to optimize
+            lr (float): learning rate
+            alpha (float): smoothing constant (default: 0.99)
+            eps (float): term added to the denominator to improve numerical stability (default: 1e-8)
+            weight_decay (float): weight decay (L2 penalty) (default: 0)
+            hooks: list of hook function applied to parameters
+        """
+        super().__init__(params, lr, hooks)
+        self.v = {}
+        self.eps = eps
+        self.weight_decay = weight_decay
+        self.alpha = alpha
+
+    def update_one(self, param: Parameter):
+        key = id(param)
+        if key not in self.v:
+            self.v[key] = np.zeros_like(param.data)
+
+        if self.weight_decay != 0.0:
+            param.grad += self.weight_decay * param.data
+
+        self.v[key] = self.alpha * self.v[key] + (1-self.alpha) * param.grad * param.grad
+        param.data -= self.lr * param.grad / ( self.eps + np.sqrt(self.v[key]) )
 
 
 

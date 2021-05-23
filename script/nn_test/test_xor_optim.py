@@ -47,7 +47,8 @@ if __name__ == "__main__":
     #### learning
 #    optim = optim.SGD(params(net), lr=1e-3)
 #    optim = optim.MomentumSGD(params(net), lr=1e-4)
-    optim = optim.AdaGrad(params(net), lr=1e-3, weight_decay=1e-3)
+#    optim = optim.AdaGrad(params(net), lr=1e-3, weight_decay=1e-3)
+    optim = optim.RMSprop(params(net), lr=1e-4)
 
 
     num_epoch = int(1e+5)
