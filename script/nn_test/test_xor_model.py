@@ -7,14 +7,6 @@ import jhML.functions as F
 import jhML.layers as nn
 import jhML.optimizer as optim
 
-def params(net):
-    params = []
-    for l in net:
-        for p in l.params():
-            params.append(p)
-
-    return params
-
 if __name__ == "__main__":
 
     x = [[0, 0],
@@ -40,11 +32,7 @@ if __name__ == "__main__":
             )
 
     #### learning
-#    optim = optim.SGD(params(net), lr=1e-3)
-#    optim = optim.MomentumSGD(params(net), lr=1e-4)
-    optim = optim.AdaGrad(net.params, lr=1e-3)
-
-
+    optim = optim.RMSprop(net.params(), lr=1e-4)
     num_epoch = int(1e+5)
     for epoch in range(num_epoch):
         optim.zero_grad()
