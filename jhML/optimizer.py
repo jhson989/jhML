@@ -55,11 +55,11 @@ class Optimizer:
 
 class SGD(Optimizer):
 
-    def __init__(self, params, lr, weight_decay=0.0):
+    def __init__(self, params, lr, weight_decay=0.0, hooks=[]):
         '''
         Stochastic Gradient Descent
         '''
-        super().__init__(params, lr)
+        super().__init__(params, lr, hooks)
         self.weight_decay = weight_decay
 
     def update_one(self, param: Variable):
@@ -76,11 +76,11 @@ class SGD(Optimizer):
 
 class MomentumSGD(Optimizer):
 
-    def __init__(self, params, lr, momentum=0.9, weight_decay=0.0):
+    def __init__(self, params, lr, momentum=0.9, weight_decay=0.0, hooks=[]):
         '''
         Stochastic Gradient Descent with Momentum
         '''
-        super().__init__(params, lr)
+        super().__init__(params, lr, hooks)
         self.m = momentum
         self.v = {}
         self.weight_decay = weight_decay
@@ -103,11 +103,11 @@ class MomentumSGD(Optimizer):
 
 class AdaGrad(Optimizer):
 
-    def __init__(self, params, lr, weight_decay=0.0, eps=1e-8):
+    def __init__(self, params, lr, weight_decay=0.0, eps=1e-8, hooks=[]):
         '''
         Adaptively adjust learning rates for each parameter
         '''
-        super().__init__(params, lr)
+        super().__init__(params, lr, hooks)
         self.h = {}
         self.eps = eps
         self.weight_decay = weight_decay
