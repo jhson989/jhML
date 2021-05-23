@@ -138,7 +138,7 @@ class AdaGrad(Optimizer):
 class RMSprop(Optimizer):
 
     def __init__(self, params, lr, alpha=0.99, weight_decay=0.0, eps=1e-8, hooks=[]):
-        r"""Implements RMSprop algorithm.
+        r"""Implements RMSprop algorithm with moving average aproach
         Proposed by G. Hinton <https://arxiv.org/pdf/1308.0850v5.pdf>
         Args:
             params (iterable): iterable of parameters to optimize
