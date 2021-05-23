@@ -1,4 +1,4 @@
-from jhML.core import Variable
+from jhML.core import Variable, Parameter
 import math
 import numpy as np
 
@@ -14,7 +14,7 @@ import numpy as np
 
 class Optimizer:
 
-    def __init__(self, params, lr):
+    def __init__(self, params, lr, hooks=[]):
         '''
         args:
             params: List of variables to be updated
@@ -22,7 +22,7 @@ class Optimizer:
         '''
         self.lr = lr
         self.params = params
-        self.hooks = []
+        self.hooks = hooks
 
     def zero_grad(self):
         for param in self.params:
@@ -135,3 +135,30 @@ class AdaGrad(Optimizer):
 # Hook functions
 # ClipGrad, FreezeParam
 ##################################################################3
+
+class ClipGrad:
+    def __init__(self, max_norm: float, norm_type: int=2):
+        r"""Clips gradient norm of an iterable of parameters.
+
+        The norm is computed over all gradients together, as if they were
+        concatenated into a single vector. Gradients are modified in-place.
+
+        Args:
+            parameters (Iterable[Tensor] or Tensor): an iterable of Tensors or a
+                single Tensor that will have gradients normalized
+            max_norm (float or int): max norm of the gradients
+            norm_type (int): type of the used p-norm.
+        """
+        self.max_norm = max_norm        
+        self.norm_type = norm_type
+        
+    def __call__(self, parameters: list[Parameter]):
+        total_norm = 0.0
+        for p in parameters:
+            total_norm += (p.grad**self.norm_type).sum()
+        total_norm = math.sqrt(float(total_norm))
+
+        if total_norm >= self.max_norm:
+            rate = self.max_norm/(total_norm + 1e-6)
+            for p in parameters:
+                p.grad *= rate
