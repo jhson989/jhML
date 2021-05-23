@@ -35,12 +35,18 @@ class Layer:
         raise NotImplementedError()
 
     def params(self):
+        params = []
         for name in self._params:
             obj = self.__dict__[name]
             if isinstance(obj, Layer):
-                yield from obj.params()
+                for p in obj.params():
+                    params.append(p)
+                #yield from obj.params()
             else:
-                yield obj
+                params.append(obj)
+                #yield obj
+        return params
+
 
     def clear_grads(self):
         for param in self.params():
