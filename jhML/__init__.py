@@ -15,7 +15,7 @@ from jhML.core import Variable
 from jhML.core import Function
 from jhML.core import tensor
 from jhML.core import setup_variable
-
+from jhML.utils.dataset import Dataset
 
 setup_variable()
 __version__ = "0.0.1"
