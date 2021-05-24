@@ -350,16 +350,65 @@ class MeanSquaredError(Function):
         gx1 = -gx0
         return gx0, gx1
 
+class SoftmaxCrossEntropy(Function):
+    r"""It is useful when training a classification problem with `C` classes.
+    
+    The `input` is expected to contain raw, unnormalized scores for each class.
+
+    If provided, the optional argument :attr:`weight` should be a 1D `Tensor`
+    assigning weight to each of the classes.
+    This is particularly useful when you have an unbalanced training set.
+
+    """
+    def __init__(self, weight=None):
+        self.weight = weight
+
+    def forward(self, x, gt):
+        N = x.shape[0]
+        log_z = 0
+        log_p = x - log_z
+        log_p = log_p[np.arrange(N), gt.ravel()]  
+
+        if self.weight is not None:
+            weight = self.weights.astype(x.dtype)[gt.ravel()]
+            log_p = weight * log_p
+
+        y = -log_p.sum() / np.float32(N)
+        return y
+
+    def backward(self, gy):
+        x, t = self.inputs[0].data, self.inputs[1].data
+        N, num_class = x.shape
+
+        gy *= 1/N
+        y = softmax(x)
+        t_onehot = np.eye(num_class, dtype=t.dtype)[t]
+        gx = (y-t_onehot) * gy
+        
+        if self.weight is not None:
+            weight = self.weights.astype(x.dtype)[t]
+            gx = gx * weight
+
+        return gx
+        
+    def logsumexp(self, x, axis=1):
+        m = x.max(axis=axis, keepdims=True)
+        y = x - m
+        np.exp(y, out=y)
+        s = y.sum(axis=axis, keepdims=True)
+        np.log(s, out=s)
+        m += s
+        return m
 
 def mean_squared_error(x0, x1):
     return MeanSquaredError()(x0, x1)
 
+def softma_cross_entropy(x, gt):
+    return SoftmaxCrossEntropy()(x, gt)
+
+
 
 '''
-class SoftmaxCrossEntropy(Function):
-    def forward(self, ):
-    def backward(self, ):
-
 
 # =============================================================================
 # accuracy / dropout / batch_norm / embed_id
@@ -377,11 +426,27 @@ class Min(Function):
     def forward(self, ):
     def backward(self, ):
 
-class Clip(Function):
-    def forward(self, ):
-    def backward(self, ):
-
 '''
+
+
+class Clip(Function):
+    def __init__(self, x_min, x_max):
+        self.x_min = x_min
+        self.x_max = x_max
+    def forward(self, x: np.ndarray):
+        y = np.clip(x, self.x_min, self.x_max)
+        return y
+
+    def backward(self, gy: np.ndarray):
+        x = self.inputs[0].data
+        mask = (self.x_min<=x) * (x<=self.x_max)
+        gx = gy * mask
+        return gx
+
+
+def clip(x, x_min, x_max):
+    return Clip(x_min, x_max)(x)
+
 
 # =============================================================================
 # conv2d / col2im / im2col / basic_math
