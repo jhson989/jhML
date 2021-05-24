@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append( os.path.dirname( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) ) )
+sys.path.append( os.path.dirname( os.path.dirname( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) ) ))
 import jhML
 import jhML.layers as L
 import jhML.functions as F
@@ -47,8 +47,8 @@ if __name__ == "__main__":
     #### learning
 #    optim = optim.SGD(params(net), lr=1e-3)
 #    optim = optim.MomentumSGD(params(net), lr=1e-4)
-#    optim = optim.AdaGrad(params(net), lr=1e-3, weight_decay=1e-3)
-    optim = optim.RMSprop(params(net), lr=1e-4)
+    optim = optim.AdaGrad(params(net), lr=1e-3, weight_decay=1e-3, hooks=[optim.ClipGrad(1e-2)])
+    
 
 
     num_epoch = int(1e+5)
