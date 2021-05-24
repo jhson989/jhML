@@ -367,7 +367,7 @@ class SoftmaxCrossEntropy(Function):
         N = x.shape[0]
         log_z = 0
         log_p = x - log_z
-        log_p = log_p[np.arrange(N), gt.ravel()]  
+        log_p = log_p[np.arange(N), gt.ravel()]  
 
         if self.weight is not None:
             weight = self.weights.astype(x.dtype)[gt.ravel()]
@@ -382,11 +382,10 @@ class SoftmaxCrossEntropy(Function):
 
         gy *= 1/N
         y = softmax(x)
-        t_onehot = np.eye(num_class, dtype=t.dtype)[t]
-        gx = (y-t_onehot) * gy
-        
+        t_onehot = np.eye(num_class, dtype=t.dtype)[t.ravel()]
+        gx = (y.data-t_onehot) * gy
         if self.weight is not None:
-            weight = self.weights.astype(x.dtype)[t]
+            weight = self.weights.astype(x.dtype)[t.ravel()]
             gx = gx * weight
 
         return gx
@@ -403,7 +402,7 @@ class SoftmaxCrossEntropy(Function):
 def mean_squared_error(x0, x1):
     return MeanSquaredError()(x0, x1)
 
-def softma_cross_entropy(x, gt):
+def softmax_cross_entropy(x, gt):
     return SoftmaxCrossEntropy()(x, gt)
 
 
@@ -415,7 +414,7 @@ def softma_cross_entropy(x, gt):
 # =============================================================================
 
 # =============================================================================
-# max / min / clip
+# max / min / clip / argmax
 # =============================================================================
 
 class Max(Function):
@@ -443,9 +442,13 @@ class Clip(Function):
         gx = gy * mask
         return gx
 
-
 def clip(x, x_min, x_max):
     return Clip(x_min, x_max)(x)
+
+
+def argmax(x: Variable, axis=1) -> list[int]:
+    return np.argmax(x.data, axis=axis) 
+
 
 
 # =============================================================================
