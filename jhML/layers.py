@@ -62,7 +62,11 @@ class Layer:
             param.to_gpu()
         return self
 
-
+    def to(self, gpu=True):
+        if gpu:
+            return self.to_gpu()
+        else:
+            return self.to_cpu()
 
 
 # =============================================================================

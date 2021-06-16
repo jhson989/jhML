@@ -38,7 +38,7 @@ class Dataloader:
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.data_len = len(dataset)
-        self.max_iter = int(self.data_size / batch_size) if drop_last else math.ceil(self.data_size / batch_size)
+        self.max_iter = int(self.data_len / batch_size) if drop_last else math.ceil(self.data_len / batch_size)
         self.gpu = gpu
         self.reset()
 
@@ -46,9 +46,10 @@ class Dataloader:
         # Validate custom dataset
         if  self.data_len <= 0:
             raise ValueError("Invalid dataset : len(dataset) > 1")
-        if isinstance (self.dataset[0], tuple) and not isinstance (self.dataset[0][0], np.array):
+
+        if isinstance (self.dataset[0], tuple) and not isinstance (self.dataset[0][0], np.ndarray):
             raise ValueError("Dataset sholud return numpy.ndarray")
-        elif not isinstance (self.dataset[0], np.array):
+        elif not isinstance (self.dataset[0], tuple) and not isinstance (self.dataset[0], np.ndarray):
             raise ValueError("Dataset sholud return numpy.ndarray")
 
         if isinstance (self.dataset[0], tuple):
@@ -75,21 +76,24 @@ class Dataloader:
             raise StopIteration
             
         i = self.iter
-        batch_idx = self.idx[i*self.batch_size : (i+1)*batch_size]
+        batch_idx = self.idx[i*self.batch_size : (i+1)*self.batch_size]
 
-        data = ([[] for _ in range(self.num_return)])
-        for idx in batch_idx:
+        data = [ data for data in self.dataset[batch_idx[0]] ]
+
+        for idx in batch_idx[1:]:
             example = self.dataset[idx]
-            if self.num_return == 1:
-                data[0].append(example)
-            else:
-                for e in range(self.num_return):
-                    data[e].append(example[e])
+            for r in range(self.num_return):
+                data[r] = np.vstack((data[r], example[r]))
 
-        if gpu:
-            data = cp.array(data)
-        else:
-            data = np.array(data, dtype=object)
-            
+        if self.batch_size == 1:
+            example = self.dataset[batch_idx[0]]
+            for r in range(self.num_return):
+                data[r] = np.vstack((data[r], example[r])) # TODO : Need to be more optimized (to add new axis, I just vstacked a dummy array)
+
+        if self.gpu:
+            for r in range(self.num_return):
+                data[r] = cp.array(data[r])
+   
+        self.iter += 1
         return data
 

@@ -143,12 +143,12 @@ class Variable():
 
     def to_cpu(self):
         if self.data is not None:
-            self.data = jhML.compute.as_numpy(self.data)
+            self.data = jhML.compute.as_cpu(self.data)
         return self
 
     def to_gpu(self):
         if self.data is not None:
-            self.data = jhML.compute.as_cupy(self.data)
+            self.data = jhML.compute.as_gpu(self.data)
         return self
 
 

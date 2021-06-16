@@ -25,7 +25,6 @@ if __name__ == "__main__":
           ]
 
     num_class = 8
-    data = jhML.Variable(x).to_gpu()
 
 
     net = nn.Sequential(
@@ -33,11 +32,11 @@ if __name__ == "__main__":
         nn.ReLU(),
         nn.Linear(4, 1000),
         nn.ReLU(),
-        nn.Linear(1000, 1000),
+        nn.Linear(1000, 800),
         nn.ReLU(),
-        nn.Linear(1000, 1000),
+        nn.Linear(800, 100),
         nn.ReLU(),
-        nn.Linear(1000, 8),
+        nn.Linear(100, 8),
         nn.ReLU(),
         nn.Linear(8, num_class)
             ).to_gpu()
@@ -46,9 +45,10 @@ if __name__ == "__main__":
     optim = optim.RMSprop(net.params(), lr=1e-4)
     num_epoch = int(1e+4)
     for epoch in range(num_epoch):
+        data, label  = jhML.Variable(x).to_gpu(), jhML.Variable(gt).to_gpu()
         optim.zero_grad()
         pred = net(data)
-        loss = F.softmax_cross_entropy(pred, gt)
+        loss = F.softmax_cross_entropy(pred, label)
         loss.backward()
         optim.step()
 

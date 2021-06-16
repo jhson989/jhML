@@ -28,7 +28,7 @@ def get_array_module(x):
     return xp
 
 
-def as_numpy(x):
+def as_cpu(x):
     """Convert to `numpy.ndarray`.
     Args:
         x (`numpy.ndarray` or `cupy.ndarray`): Arbitrary object that can be
@@ -46,7 +46,7 @@ def as_numpy(x):
     return cp.asnumpy(x)
 
 
-def as_cupy(x):
+def as_gpu(x):
     """Convert to `cupy.ndarray`.
     Args:
         x (`numpy.ndarray` or `cupy.ndarray`): Arbitrary object that can be
