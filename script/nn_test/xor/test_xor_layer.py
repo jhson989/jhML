@@ -4,7 +4,6 @@ sys.path.append( os.path.dirname( os.path.dirname( os.path.dirname( os.path.dirn
 import jhML
 import jhML.layers as L
 import jhML.functions as F
-import numpy as np
 
 def clear_grad(net):
     for l in net:

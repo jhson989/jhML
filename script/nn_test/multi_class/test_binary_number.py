@@ -5,8 +5,6 @@ import jhML
 import jhML.layers as nn
 import jhML.functions as F
 import jhML.optimizer as optim
-import numpy as np
- 
 
 if __name__ == "__main__":
 

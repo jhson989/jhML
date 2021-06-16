@@ -5,7 +5,6 @@ import jhML
 import jhML.layers as L
 import jhML.functions as F
 import jhML.optimizer as optim
-import numpy as np
 
 def forward(x, net):
     activ = F.relu
