@@ -2,6 +2,13 @@ import weakref
 import numpy as np
 import jhML
 
+try:
+    import cupy
+    array_types = (np.ndarray, cupy.ndarray)
+except ImportError:
+    array_types = (np.ndarray)
+
+
 
 # ===================================
 # Configuration
@@ -47,10 +54,10 @@ class Variable():
     """
     __array_priority__ = 200 # High priority for operators
 
-    def __init__(self, data, requires_grad=True, name=None):
+    def __init__(self, data, requires_grad=True, name=None, array_module=np):
 
-        if data is not None and not isinstance(data, np.ndarray):
-            data = np.array(data)
+        if data is not None and not isinstance(data, array_types):
+            data = array_module.array(data)
 
         self.data = data
         self.name = name
@@ -99,8 +106,12 @@ class Variable():
         [arg 1] retain_grad : if True, retain intermediate gradient results. Default value is False
         """
 
+
+        xp = jhML.compute.get_array_module(self.data)
+
+
         if self.grad is None:
-            self.grad = np.ones_like(self.data)
+            self.grad = xp.ones_like(self.data)
 
         funcs = []
         seen_set = set()
@@ -130,6 +141,16 @@ class Variable():
                 for y in f.outputs:
                     y().grad = None
 
+    def to_cpu(self):
+        if self.data is not None:
+            self.data = jhML.compute.as_numpy(self.data)
+        return self
+
+    def to_gpu(self):
+        if self.data is not None:
+            self.data = jhML.compute.as_cupy(self.data)
+        return self
+
 
 def as_variable(obj):
     if isinstance(obj, Variable):
@@ -137,15 +158,16 @@ def as_variable(obj):
     return Variable(obj)
 
 
-def as_array(x):
+def as_array(x, array_module=np):
     if np.isscalar(x):
-        return np.array(x)
+        return array_module.array(x)
     return x
 
-def tensor(obj):
-    if isinstance(obj, np.ndarray):
+
+def tensor(obj, array_module=np):
+    if isinstance(obj, array_types):
         return obj
-    return np.array(obj)
+    return array_module.array(obj)
 
 
 ### For convenience : an alias (Variable -> Parameter)
@@ -191,9 +213,9 @@ class Function:
 # ===================================
 # Basic scalar (point-wise) arithmetic operations. def-forward and def-backward are only used for calculating.
 # forward
-#   [args xs] : np.ndarray type. xs are data
+#   [args xs] : xp.ndarray type. xs are data
 # backward
-#   [args gy] : np.ndarray type. gy is a gradient from a child variable.
+#   [args gy] : xp.ndarray type. gy is a gradient from a child variable.
 # ===================================
 
 class Add(Function):

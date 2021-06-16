@@ -1,7 +1,7 @@
 import numpy as np
 import jhML
 from jhML.core import Function, Variable, as_variable, as_array
-
+from jhML.compute import get_array_module
 
 # =============================================================================
 # Basic functions: sin / cos / tanh / exp / log
@@ -11,46 +11,53 @@ from jhML.core import Function, Variable, as_variable, as_array
 #   [args gy] np.ndarray data
 # =============================================================================
 class Sin(Function):
-    def forward(self, x) -> np.ndarray:
-        y = np.sin(x)
+    def forward(self, x):
+        xp = get_array_module(x)
+        y = xp.sin(x)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
+        xp = get_array_module(gy)
         x = self.inputs[0].data
-        gx = gy * np.cos(x) # cos(x)
+        gx = gy * xp.cos(x) # cos(x)
         return gx
 
 class Cos(Function):
-    def forward(self, x) -> np.ndarray:
-        y = np.cos(x)
+    def forward(self, x):
+        xp = get_array_module(x)
+        y = xp.cos(x)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
+        xp = get_array_module(gy)
         x = self.inputs[0].data
-        gx = gy * -1 * np.sin(x)
+        gx = gy * -1 * xp.sin(x)
         return gx
         
 class Tanh(Function):
-    def forward(self, x) -> np.ndarray:
-        y = np.tanh(x)
+    def forward(self, x):
+        xp = get_array_module(x)
+        y = xp.tanh(x)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         y = self.outputs[0]().data
         gx = gy * (1 - y * y)
         return gx
 
 class Exp(Function):
-    def forward(self, x) -> np.ndarray:
-        y = np.exp(x)
+    def forward(self, x):
+        xp = get_array_module(x)
+        y = xp.exp(x)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         y = self.outputs[0]().data
         gx = gy * y
         return gx
 
 class Log(Function):
-    def forward(self, x) -> np.ndarray:
-        y = np.log(x)
+    def forward(self, x):
+        xp = get_array_module(x)
+        y = xp.log(x)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         x = self.inputs[0].data
         gx = gy / x
         return gx
@@ -72,10 +79,10 @@ def log(x) -> Variable:
 class Reshape(Function):
     def __init__(self, shape):
         self.shape = shape
-    def forward(self, x) -> np.ndarray:
+    def forward(self, x):
         y = x.reshape(self.shape)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         x = self.inputs[0].data
         gx = gy.reshape(x.shape)
         return gx
@@ -84,15 +91,15 @@ class Reshape(Function):
 class Transpose(Function):
     def __init__(self, axes=None):
         self.axes = axes
-    def forward(self, x) -> np.ndarray:
+    def forward(self, x):
         y = x.transpose(self.axes)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         x = self.inputs[0].data
         if self.axes is None:
             inv_axes = range(x.ndim)[::-1]
         else:
-            inv_axes = tuple(np.argsort([ax for ax in self.axes]))
+            inv_axes = tuple(xp.argsort([ax for ax in self.axes]))
         gx = gy.transpose(self.axes)
         return gx
         
@@ -100,12 +107,13 @@ class GetItem(Function):
     def __init__(self, slices):
         self.slices = slices
         
-    def forward(self, x) -> np.ndarray:
+    def forward(self, x):
         return x[self.slices]
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
+        xp = get_array_module(gy)
         x = self.inputs[0].data
-        gx = np.zeros(x.shape, dtype=gy.dtype)
-        np.add.at(gx, self.slices, gy)
+        gx = xp.zeros(x.shape, dtype=gy.dtype)
+        xp.add.at(gx, self.slices, gy)
         return gx
 
 def reshape(x, shape) -> Variable:
@@ -130,13 +138,14 @@ class Sum(Function):
     def __init__(self, axis, keepdims):
         self.axis = axis
         self.keepdims = keepdims
-    def forward(self, x) -> np.ndarray:
+    def forward(self, x):
         y = x.sum(axis=self.axis, keepdims=self.keepdims)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
+        xp = get_array_module(gy)
         x = self.inputs[0].data
         gy = self.reshape_sum_backward(gy)
-        gx = np.broadcast_to(gy, x.shape)
+        gx = xp.broadcast_to(gy, x.shape)
         return gx
 
     def reshape_sum_backward(self, gy):    
@@ -164,9 +173,9 @@ class Sum(Function):
 class SumTo(Function):
     def __init__(self, shape):
         self.y_shape = shape
-    def forward(self, x) -> np.ndarray:
+    def forward(self, x):
         return self.sum_to(x)
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         x = self.inputs[0].data
         return broadcast_to(gy, x.shape).data
     def sum_to(self, x):   
@@ -184,18 +193,19 @@ class SumTo(Function):
 class BroadcastTo(Function):
     def __init__(self, shape):
         self.y_shape = shape
-    def forward(self, x) -> np.ndarray:
-        y = np.broadcast_to(x, self.y_shape)
+    def forward(self, x):
+        xp = get_array_module(x)
+        y = xp.broadcast_to(x, self.y_shape)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         x = self.inputs[0].data
         return sum_to(gy, x.shape).data
 
 class MatMul(Function):
-    def forward(self, x, W) -> np.ndarray:
+    def forward(self, x, W):
         y = x.dot(W)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         x, W = self.inputs[0].data, self.inputs[1].data
         gx = gy.dot(W.T)
         gW = (x.T).dot(gy)
@@ -203,12 +213,12 @@ class MatMul(Function):
 
 
 class Linear(Function):
-    def forward(self, x, W, b=None) -> np.ndarray:
+    def forward(self, x, W, b=None):
         y = x.dot(W)
         if b is not None:
             y = y + b
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         x, W, b = self.inputs[0].data, self.inputs[1].data, self.inputs[2].data 
         gb = None if b.data is None else sum_to(gy, b.shape).data
         gx = gy.dot(W.T)
@@ -249,18 +259,19 @@ def linear(x, W, b=None) -> Variable:
 # =============================================================================
 class Sigmoid(Function):
     def forward(self, x):
-        #y = 1 / (1 + np.exp(-x))
-        y = np.tanh(x*0.5)*0.5 + 0.5
+        xp = get_array_module(x)
+        y = xp.tanh(x*0.5)*0.5 + 0.5
         return y
     def backward(self, gy):
         y = self.outputs[0]().data
         return gy * y * (1-y)
 
 class ReLU(Function):
-    def forward(self, x) -> np.ndarray:
-        y = np.maximum(x, 0.0)
+    def forward(self, x):
+        xp = get_array_module(x)
+        y = xp.maximum(x, 0.0)
         return y
-    def backward(self, gy) -> np.ndarray:
+    def backward(self, gy):
         x = self.inputs[0].data
         mask = x > 0
         gx = gy * mask
@@ -272,8 +283,9 @@ class Softmax(Function):
     def __init__(self, axis):
         self.axis = axis
     def forward(self, x):
+        xp = get_array_module(x)
         y = x-x.max(axis=self.axis, keepdims=True)
-        y = np.exp(y)
+        y = xp.exp(y)
         y /= y.sum(axis=self.axis, keepdims=True)
         return y
     def backward(self, gy):
@@ -287,17 +299,19 @@ class LogSoftmax(Function):
     def __init__(self, axis):
         self.axis = axis
     def forward(self, x):
+        xp = get_array_module(x)
         m = x.max(axis=self.axis, keepdims=True)
         y = x - m
-        np.exp(y, out=y)
+        xp.exp(y, out=y)
         s = y.sum(axis=self.axis, keepdims=True)
-        np.log(s, out=s)
+        xp.log(s, out=s)
         log_z = m+s
         y = x - log_z
         return y
     def backward(self, gy):
+        xp = get_array_module(hy)
         y = self.outputs[0]().data
-        gx = gy - np.exp(y) * gy.sum(axis=self.axis, keepdims=True)
+        gx = gy - xp.exp(y) * gy.sum(axis=self.axis, keepdims=True)
         return gx
 
 class LeakyReLU(Function):
@@ -364,25 +378,27 @@ class SoftmaxCrossEntropy(Function):
         self.weight = weight
 
     def forward(self, x, gt):
+        xp = get_array_module(x)
         N = x.shape[0]
         log_z = 0
         log_p = x - log_z
-        log_p = log_p[np.arange(N), gt.ravel()]  
+        log_p = log_p[xp.arange(N), gt.ravel()]  
 
         if self.weight is not None:
             weight = self.weights.astype(x.dtype)[gt.ravel()]
             log_p = weight * log_p
 
-        y = -log_p.sum() / np.float32(N)
+        y = -log_p.sum() / xp.float32(N)
         return y
 
     def backward(self, gy):
+        xp = get_array_module(gy)
         x, t = self.inputs[0].data, self.inputs[1].data
         N, num_class = x.shape
 
         gy *= 1/N
         y = softmax(x)
-        t_onehot = np.eye(num_class, dtype=t.dtype)[t.ravel()]
+        t_onehot = xp.eye(num_class, dtype=t.dtype)[t.ravel()]
         gx = (y.data-t_onehot) * gy
         if self.weight is not None:
             weight = self.weights.astype(x.dtype)[t.ravel()]
@@ -391,11 +407,12 @@ class SoftmaxCrossEntropy(Function):
         return gx
         
     def logsumexp(self, x, axis=1):
+        xp = get_array_module(x)
         m = x.max(axis=axis, keepdims=True)
         y = x - m
-        np.exp(y, out=y)
+        xp.exp(y, out=y)
         s = y.sum(axis=axis, keepdims=True)
-        np.log(s, out=s)
+        xp.log(s, out=s)
         m += s
         return m
 
@@ -432,11 +449,12 @@ class Clip(Function):
     def __init__(self, x_min, x_max):
         self.x_min = x_min
         self.x_max = x_max
-    def forward(self, x: np.ndarray):
-        y = np.clip(x, self.x_min, self.x_max)
+    def forward(self, x):
+        xp = get_array_module(x)
+        y = xp.clip(x, self.x_min, self.x_max)
         return y
 
-    def backward(self, gy: np.ndarray):
+    def backward(self, gy):
         x = self.inputs[0].data
         mask = (self.x_min<=x) * (x<=self.x_max)
         gx = gy * mask
@@ -447,7 +465,8 @@ def clip(x, x_min, x_max):
 
 
 def argmax(x: Variable, axis=1) -> list[int]:
-    return np.argmax(x.data, axis=axis) 
+    xp = get_array_module(x.data)
+    return xp.argmax(x.data, axis=axis) 
 
 
 

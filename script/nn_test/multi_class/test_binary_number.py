@@ -25,17 +25,22 @@ if __name__ == "__main__":
           ]
 
     num_class = 8
-    data = jhML.Variable(x)      
+    data = jhML.Variable(x).to_gpu()
+
 
     net = nn.Sequential(
         nn.Linear(3, 4),
         nn.ReLU(),
-        nn.Linear(4, 8),
+        nn.Linear(4, 1000),
         nn.ReLU(),
-        nn.Linear(8, 8),
+        nn.Linear(1000, 1000),
+        nn.ReLU(),
+        nn.Linear(1000, 1000),
+        nn.ReLU(),
+        nn.Linear(1000, 8),
         nn.ReLU(),
         nn.Linear(8, num_class)
-            )
+            ).to_gpu()
 
     #### learning
     optim = optim.RMSprop(net.params(), lr=1e-4)
@@ -53,8 +58,8 @@ if __name__ == "__main__":
             
 
     for num in x:
-        data = jhML.Variable(num)
-        pred = net(data)
+        data = jhML.Variable(num).to_gpu()
+        pred = net(data).to_cpu()
         print("0b%d%d%d = %d" % (num[0], num[1], num[2], F.argmax(pred, axis=0)))
         print(F.softmax(pred, axis=0).data)
 

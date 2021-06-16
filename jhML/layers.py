@@ -51,6 +51,16 @@ class Layer:
     def clear_grads(self):
         for param in self.params():
             param.clear_grad()
+            
+    def to_cpu(self):
+        for param in self.params():
+            param.to_cpu()
+        return self
+
+    def to_gpu(self):
+        for param in self.params():
+            param.to_gpu()
+        return self
 
 
 
