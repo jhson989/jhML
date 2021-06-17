@@ -380,7 +380,7 @@ class SoftmaxCrossEntropy(Function):
     def forward(self, x, gt):
         xp = get_array_module(x)
         N = x.shape[0]
-        log_z = 0
+        log_z = self.logsumexp(x)
         log_p = x - log_z
         log_p = log_p[xp.arange(N), gt.ravel()]  
 
