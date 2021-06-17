@@ -11,7 +11,7 @@ Additionally, it provides utilities for developing deep learning applications
 It will support GPGPU features, so you can run your tensor computations on an GPU someday. :)
 """
 
-from jhML.core import ProgramConfig
+from jhML.core import ProgramConfig, train, test, no_grad
 from jhML.core import Variable
 from jhML.core import Function
 from jhML.core import tensor

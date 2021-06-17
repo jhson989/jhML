@@ -1,4 +1,5 @@
 import weakref
+import contextlib
 import numpy as np
 import jhML
 
@@ -21,6 +22,7 @@ class ProgramConfig:
     enable_backprop = True
     train = True
 
+@contextlib.contextmanager
 def using_config(name, value):
     """
     Try to set [config-value] to [value] and do some prosedures.
@@ -38,11 +40,11 @@ def using_config(name, value):
 def no_grad():
     return using_config("enable_backprop", False)
 
+def train():
+    return setattr(ProgramConfig, "train", True)
 
-def train_mode():
-    return using_config("train", True)
-
-
+def test():
+    return setattr(ProgramConfig, "train", False)
 
 def test_mode():
     return using_config("train", False)

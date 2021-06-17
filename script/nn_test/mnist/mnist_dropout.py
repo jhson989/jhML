@@ -46,6 +46,7 @@ if __name__ == "__main__":
     
 
     #### learning
+    jhML.train()
     optim = optim.RMSprop(net.params(), lr=5e-5)
     num_epoch = int(1e+2)
     for epoch in range(num_epoch):
@@ -64,16 +65,16 @@ if __name__ == "__main__":
             if epoch%1 == 0 and i == (len(train_dataloader)-1):
                 print("EPOCH (%d/%d), ITER (%d/%d)" % (epoch, num_epoch, i, len(train_dataloader)))
                 print(" acc: %f, loss: %f" % (total_accuracy/len(train_dataloader), total_loss/len(train_dataloader)))
-                #pred, label = jhML.as_cpu(pred), jhML.as_cpu(label)
-                #print("PR: " + str(F.argmax(pred)))
-                #print("GT: " + str(label.ravel()))
-            
+        
 
+    #### testing
     print("[[TEST]] Test start")
     total_accuracy = 0.0
-    for i, (data, label) in enumerate(test_dataloader):
-        pred = net(data)
-        total_accuracy += get_accuracy(F.argmax(pred), label.ravel())
-    print(" test acc: %f" % (total_accuracy/len(test_dataloader)))
+    jhML.test()
+    with jhML.no_grad():
+        for i, (data, label) in enumerate(test_dataloader):
+            pred = net(data)
+            total_accuracy += get_accuracy(F.argmax(pred), label.ravel())
+        print(" test acc: %f" % (total_accuracy/len(test_dataloader)))
 
     
