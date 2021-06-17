@@ -366,13 +366,10 @@ class MeanSquaredError(Function):
 
 class SoftmaxCrossEntropy(Function):
     r"""It is useful when training a classification problem with `C` classes.
-    
     The `input` is expected to contain raw, unnormalized scores for each class.
-
     If provided, the optional argument :attr:`weight` should be a 1D `Tensor`
     assigning weight to each of the classes.
     This is particularly useful when you have an unbalanced training set.
-
     """
     def __init__(self, weight=None):
         self.weight = weight
@@ -424,16 +421,37 @@ def softmax_cross_entropy(x, gt):
 
 
 
-'''
+
 
 # =============================================================================
 # accuracy / dropout / batch_norm / embed_id
 # =============================================================================
 
+class Dropout(Function):
+    def __init__(self, dropout_ratio=0.5):
+        self.dropout_ratio = dropout_ratio
+    def forward(self, x):
+        xp = get_array_module(x)
+
+        if jhML.ProgramConfig.train:
+            self.mask = (xp.random.rand(*x.shape) > self.dropout_ratio).astype(x.dtype)
+            #self.scale = xp.array(1.0-self.dropout_ratio).astype(x.dtype)
+            y = x * self.mask / (1.0-self.dropout_ratio)
+            return y
+        else:
+            return x
+    def backward(self, gy):
+        xp = get_array_module(gy)
+
+        if jhML.ProgramConfig.train:
+            gx = gy * self.mask / (1.0-self.dropout_ratio)
+            return gx
+        else:
+            return gy
 # =============================================================================
 # max / min / clip / argmax
 # =============================================================================
-
+'''
 class Max(Function):
     def forward(self, ):
     def backward(self, ):

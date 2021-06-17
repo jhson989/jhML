@@ -133,8 +133,6 @@ class Linear(Layer):
         y = F.linear(x, self.W, self.b)
         return y
 
-ReLU = F.ReLU        
-
 class Sequential(Layer):
     r"""A sequential container.
     Modules will be added to it in the order they are passed in the constructor.
@@ -162,3 +160,6 @@ class Sequential(Layer):
         return x
 
 
+
+ReLU = F.ReLU        
+Dropout = F.Dropout
