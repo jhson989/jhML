@@ -99,3 +99,5 @@ class Dataloader:
         self.iter += 1
         return data
 
+    def __len__(self):
+        return self.max_iter
