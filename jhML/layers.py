@@ -68,6 +68,38 @@ class Layer:
         else:
             return self.to_cpu()
 
+    def save(self, path):
+        self.to_cpu()
+        params_dict = {}
+        self._flatten_params_dict(params_dict)
+        ndarray_dict = {key:param.data for key, param in params_dict.items() if param is not None}
+
+        try:
+            np.savez_compressed(path, **ndarray_dict)
+        except (Exception, KeyboardInterrupt()) as e:
+            if os.path.exists(path):
+                os.remove(path)
+            raise
+
+    def load(self, path):
+        npz = np.load(path)
+        params_dict = {}
+        self._flatten_params_dict(params_dict)
+        
+        for key, param in params_dict.items():
+            if key in npz:
+                param.data = npz[key] 
+
+
+    def _flatten_params_dict(self, params_dict, parent_key=""):
+        for name in self._params:
+            obj = self.__dict__[name]
+            key = parent_key + "/" + name if parent_key != "" else name
+
+            if isinstance(obj, Layer):
+                obj._flatten_params_dict(params_dict, key)
+            else:
+                params_dict[key] = obj
 
 # =============================================================================
 # Linear / Conv2d / Deconv2d
