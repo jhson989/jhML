@@ -15,7 +15,11 @@ from jhML.core import Variable
 from jhML.core import Function
 from jhML.core import tensor
 from jhML.core import setup_variable
-from jhML.utils.dataset import Dataset
+from jhML.utils.data import Dataset, Dataloader
+from jhML.compute import as_cpu, as_gpu, get_array_module
+import numpy as np
+
+
 
 setup_variable()
 __version__ = "0.0.1"

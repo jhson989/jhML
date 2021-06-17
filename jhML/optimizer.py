@@ -1,7 +1,7 @@
 from jhML.core import Variable, Parameter
 import math
 import numpy as np
-
+from jhML.compute import get_array_module
 
 
 
@@ -94,13 +94,13 @@ class MomentumSGD(Optimizer):
         self.weight_decay = weight_decay
 
     def update_one(self, param: Parameter):
-
+        xp = get_array_module(param.data)
         if self.weight_decay != 0.0:
             param.grad += self.weight_decay * param.data
             
         key = id(param)
         if key not in self.v:
-            self.v[key] = np.zeros_like(param.data)
+            self.v[key] = xp.zeros_like(param.data)
 
         self.v[key] = self.m * self.v[key] - self.lr * param.grad
         param.data += self.v[key]
@@ -124,15 +124,16 @@ class AdaGrad(Optimizer):
         self.weight_decay = weight_decay
 
     def update_one(self, param: Parameter):
+        xp = get_array_module(param.data)
         key = id(param)
         if key not in self.h:
-            self.h[key] = np.zeros_like(param.data)
+            self.h[key] = xp.zeros_like(param.data)
 
         if self.weight_decay != 0.0:
             param.grad += self.weight_decay * param.data
 
         self.h[key] = self.h[key] + param.grad * param.grad
-        param.data -= self.lr * param.grad / ( self.eps + np.sqrt(self.h[key]) )
+        param.data -= self.lr * param.grad / ( self.eps + xp.sqrt(self.h[key]) )
 
 
 class RMSprop(Optimizer):
@@ -155,15 +156,16 @@ class RMSprop(Optimizer):
         self.alpha = alpha
 
     def update_one(self, param: Parameter):
+        xp = get_array_module(param.data)
         key = id(param)
         if key not in self.v:
-            self.v[key] = np.zeros_like(param.data)
+            self.v[key] = xp.zeros_like(param.data)
 
         if self.weight_decay != 0.0:
             param.grad += self.weight_decay * param.data
 
         self.v[key] = self.alpha * self.v[key] + (1-self.alpha) * param.grad * param.grad
-        param.data -= self.lr * param.grad / ( self.eps + np.sqrt(self.v[key]) )
+        param.data -= self.lr * param.grad / ( self.eps + xp.sqrt(self.v[key]) )
 
 
 
