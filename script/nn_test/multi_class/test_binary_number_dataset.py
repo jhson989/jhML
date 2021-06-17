@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     #### learning
     optim = optim.RMSprop(net.params(), lr=1e-4)
-    num_epoch = int(1e+4)
+    num_epoch = int(5e+3)
     for epoch in range(num_epoch):
         for i, (data, label) in enumerate(train_dataloader):
             optim.zero_grad()
@@ -76,11 +76,12 @@ if __name__ == "__main__":
                 print(label.ravel())
             
 
+    print("[[TEST]] Test start")
     for i, (data, label) in enumerate(test_dataloader):
         print(data)
         pred = net(data).to_cpu()
-        print("0b%d%d%d = %d" % (data[0][0], data[0][1], data[0][2], F.argmax(pred, axis=0)[0]))
-        print(F.softmax(pred, axis=0).data[0])
+        print("0b%d%d%d = %d" % (data[0][0], data[0][1], data[0][2], F.argmax(pred, axis=1)[0]))
+        print(F.softmax(pred, axis=1).data[0])
 
 
 

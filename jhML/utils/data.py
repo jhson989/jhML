@@ -80,19 +80,21 @@ class Dataloader:
 
         data = [ data for data in self.dataset[batch_idx[0]] ]
 
-        for idx in batch_idx[1:]:
-            example = self.dataset[idx]
-            for r in range(self.num_return):
-                data[r] = np.vstack((data[r], example[r]))
-
         if self.batch_size == 1:
             example = self.dataset[batch_idx[0]]
             for r in range(self.num_return):
-                data[r] = np.vstack((data[r], example[r])) # TODO : Need to be more optimized (to add new axis, I just vstacked a dummy array)
+                data[r] = np.expand_dims(data[r], axis=0)
+        else:            
+            for idx in batch_idx[1:]:
+                example = self.dataset[idx]
+                for r in range(self.num_return):
+                    data[r] = np.vstack((data[r], example[r]))
+
 
         if self.gpu:
             for r in range(self.num_return):
                 data[r] = cp.array(data[r])
+                
    
         self.iter += 1
         return data
