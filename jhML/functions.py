@@ -6,9 +6,9 @@ from jhML.compute import get_array_module
 # =============================================================================
 # Basic functions: sin / cos / tanh / exp / log
 # forward
-#   [args xs] np.ndarray data
+#   [args xs] xp.ndarray data
 # backward
-#   [args gy] np.ndarray data
+#   [args gy] xp.ndarray data
 # =============================================================================
 class Sin(Function):
     def forward(self, x):
