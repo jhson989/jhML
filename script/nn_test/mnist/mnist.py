@@ -31,7 +31,7 @@ net = nn.Sequential(
 
 if __name__ == "__main__":
 
-    using_gpu = True
+    using_gpu = False
     num_class = 10
     dataset_mnist_train = MNIST(train=True, flatten=True)
     dataset_mnist_test = MNIST(train=False, flatten=True)
