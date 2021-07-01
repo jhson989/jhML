@@ -191,7 +191,7 @@ class ClipGrad:
         self.max_norm = max_norm        
         self.norm_type = norm_type
         
-    def __call__(self, parameters: list[Parameter]):
+    def __call__(self, parameters):
         total_norm = 0.0
         for p in parameters:
             total_norm += (p.grad**self.norm_type).sum()

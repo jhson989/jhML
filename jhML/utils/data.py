@@ -2,7 +2,7 @@
 import os
 import numpy as np
 import math
-from jhML.compute import cp
+
 
 #######################################################
 # Base class for dataset
@@ -93,6 +93,7 @@ class Dataloader:
 
         if self.gpu:
             for r in range(self.num_return):
+                from jhML.compute import cp
                 data[r] = cp.array(data[r])
                 
    

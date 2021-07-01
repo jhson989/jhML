@@ -99,6 +99,7 @@ class Transpose(Function):
         if self.axes is None:
             inv_axes = range(x.ndim)[::-1]
         else:
+            xp = get_array_module(gy)
             inv_axes = tuple(xp.argsort([ax for ax in self.axes]))
         gx = gy.transpose(self.axes)
         return gx
@@ -309,7 +310,7 @@ class LogSoftmax(Function):
         y = x - log_z
         return y
     def backward(self, gy):
-        xp = get_array_module(hy)
+        xp = get_array_module(gy)
         y = self.outputs[0]().data
         gx = gy - xp.exp(y) * gy.sum(axis=self.axis, keepdims=True)
         return gx
@@ -482,7 +483,7 @@ def clip(x, x_min, x_max):
     return Clip(x_min, x_max)(x)
 
 
-def argmax(x: Variable, axis=1) -> list[int]:
+def argmax(x: Variable, axis=1):
     xp = get_array_module(x.data)
     return xp.argmax(x.data, axis=axis) 
 
