@@ -3,6 +3,7 @@ import weakref
 import jhML
 from jhML.core import Parameter
 import jhML.functions as F
+import os
 
 
 
@@ -76,7 +77,7 @@ class Layer:
 
         try:
             np.savez_compressed(path, **ndarray_dict)
-        except (Exception, KeyboardInterrupt()) as e:
+        except (Exception) as e:
             if os.path.exists(path):
                 os.remove(path)
             raise
