@@ -161,6 +161,57 @@ class Sequential(Layer):
         return x
 
 
+class Conv2d(Layer):
+
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, pad=0, nobias=False, dtype=np.float32):
+        super().__init__()
+
+        self.dtype = dtype
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.pad = pad
+
+        self.W = Parameter(None, name='W')
+        self._init_W()
+
+        if nobias:
+            self.b = None
+        else:
+            self.b = Parameter(np.zeros(out_channels, dtype=dtype), name='b')
+
+
+    def _init_W(self):
+        r''' He weight initialization
+        Proposed by He et al. , 2015 <https://arxiv.org/abs/1502.01852>
+        '''
+        C, OC = self.in_channels, self.out_channels
+        KH, KW = self.kernel_size, self.kernel_size
+        scale = np.sqrt(1 / (C * KH * KW))
+        W_data = np.random.randn(OC, C, KH, KW).astype(self.dtype) * scale
+        self.W.data = W_data
+
+        self.W = F.transpose(F.reshape(self.W, (OC, -1))) # Weight = self.W.reshape(OC, -1).transpose()
+
+    def forward(self, x):
+
+        N, C, H, W = x.shape
+        OC, C, KH, KW = self.W.shape
+        SH, SW = self.stride, self.stride
+        PH, PW = self.pad, self.pad
+        OH = get_conv_outsize(H, KH, SH, PH)
+        OW = get_conv_outsize(W, KW, SW, PW)
+
+        col = F.im2col(x, (KH, KW), self.stride, self.pad, to_matrix=True)
+        t = F.linear(col, W, self.b)
+        y = F.transpose(F.reshape(t, (N, OH, OW, OC)), (0, 3, 1, 2)) # y = t.reshape(N, OH, OW, OC).transpose(0, 3, 1, 2)
+
+
+        y = F.linear(x, self.W, self.b)
+        return x
+
+
 
 ReLU = F.ReLU        
 Dropout = F.Dropout

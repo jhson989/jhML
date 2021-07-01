@@ -12,12 +12,14 @@ It will support GPGPU features, so you can run your tensor computations on an GP
 """
 
 from jhML.core import ProgramConfig, train, test, no_grad
-from jhML.core import Variable
+from jhML.core import Variable, Parameter
 from jhML.core import Function
+from jhML.layers import Layer
 from jhML.core import tensor
 from jhML.core import setup_variable
 from jhML.utils.data import Dataset, Dataloader
 from jhML.compute import as_cpu, as_gpu, get_array_module
+from jhML.functions_conv import _im2col_gpu, _col2im_gpu
 import numpy as np
 
 
